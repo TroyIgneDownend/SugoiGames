@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DTech IT Setup Guide 2.0</title>
+    <style>
+      /* ── Reset & Base ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #f5f5f5;
+        padding: 2rem 1rem;
+      }
+
+      /* ── Page wrapper ── */
+      .page {
+        max-width: 860px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 3rem 3.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+      }
+
+      /* ── Header ── */
+      .doc-header {
+        border-bottom: 3px solid #1a56db;
+        padding-bottom: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .doc-header h1 {
+        font-size: 1.75rem;
+        color: #1a1a1a;
+        margin-bottom: 0.4rem;
+      }
+      .doc-meta {
+        font-size: 0.82rem;
+        color: #555;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+      }
+      .doc-meta span::before {
+        content: "▸ ";
+        color: #1a56db;
+      }
+
+      /* ── Headings ── */
+      h2 {
+        font-size: 1.25rem;
+        color: #1a1a1a;
+        margin: 2.5rem 0 0.75rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      h3 {
+        font-size: 1rem;
+        color: #1a1a1a;
+        margin: 1.75rem 0 0.5rem;
+      }
+
+      /* ── Paragraphs & lists ── */
+      p {
+        margin-bottom: 0.75rem;
+      }
+      ul,
+      ol {
+        margin: 0.5rem 0 0.75rem 1.5rem;
+      }
+      li {
+        margin-bottom: 0.25rem;
+      }
+      em {
+        font-style: italic;
+        color: #555;
+      }
+
+      /* ── Code ── */
+      code {
+        font-family: "Consolas", "Cascadia Code", "Lucida Console", monospace;
+        font-size: 0.875em;
+        background: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 0.1em 0.35em;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 5px;
+        padding: 1rem 1.25rem;
+        margin: 0.75rem 0 1rem;
+        overflow-x: auto;
+        font-family: "Consolas", "Cascadia Code", "Lucida Console", monospace;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        position: relative;
+      }
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: inherit;
+        color: inherit;
+      }
+
+      /* ── Tables ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.75rem 0 1rem;
+        font-size: 0.9rem;
+      }
+      th {
+        background: #1a56db;
+        color: #fff;
+        text-align: left;
+        padding: 0.55rem 0.75rem;
+        font-weight: 600;
+      }
+      td {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #e8e8e8;
+        vertical-align: top;
+      }
+      tr:nth-child(even) td {
+        background: #f8f9ff;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* ── Warning / note callouts ── */
+      .warn {
+        background: #fff8e1;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0 4px 4px 0;
+        padding: 0.65rem 1rem;
+        margin: 0.75rem 0;
+        font-size: 0.92rem;
+      }
+      .note {
+        background: #eff6ff;
+        border-left: 4px solid #1a56db;
+        border-radius: 0 4px 4px 0;
+        padding: 0.65rem 1rem;
+        margin: 0.75rem 0;
+        font-size: 0.92rem;
+      }
+
+      /* ── Phase badge ── */
+      .phase-label {
+        display: inline-block;
+        background: #1a56db;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.6rem;
+        border-radius: 3px;
+        margin-bottom: 0.4rem;
+      }
+      .phase-label.instructor {
+        background: #047857;
+      }
+      .phase-label.students {
+        background: #7c3aed;
+      }
+
+      /* ── Horizontal rule ── */
+      hr {
+        border: none;
+        border-top: 1px solid #e0e0e0;
+        margin: 2rem 0;
+      }
+
+      /* ── Print ── */
+      @media print {
+        body {
+          background: #fff;
+          padding: 0;
+        }
+        .page {
+          box-shadow: none;
+          border: none;
+          padding: 1rem;
+        }
+        pre {
+          border: 1px solid #ccc;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- Header -->
+      <div class="doc-header">
+        <h1>DTech 2D Game Development — IT Setup Guide</h1>
+        <div class="doc-meta">
+          <span>Version 2.0</span>
+          <span>Last Updated: 04-04-2026</span>
+          <span>Compatible OS: Windows 10 (build 1809+), Windows 11</span>
+          <span>Audience: IT and technical support personnel</span>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <h2>Overview — Who Does What</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Install software on each machine</td>
+            <td><strong>IT</strong></td>
+          </tr>
+          <tr>
+            <td>Install VS Code extensions</td>
+            <td><strong>IT</strong></td>
+          </tr>
+          <tr>
+            <td>Open firewall / allowlist domains</td>
+            <td><strong>IT</strong></td>
+          </tr>
+          <tr>
+            <td>Verify installs</td>
+            <td><strong>IT</strong></td>
+          </tr>
+          <tr>
+            <td>StarterProject already on GitHub — no action needed</td>
+            <td><strong>Instructor (done)</strong></td>
+          </tr>
+          <tr>
+            <td>GitHub account creation + Education signup</td>
+            <td>
+              <strong>Students</strong> (pre-assigned via Google Classroom)
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Git identity config + <code>git clone</code> of starter project
+            </td>
+            <td><strong>Students</strong> (in-class Git lesson)</td>
+          </tr>
+          <tr>
+            <td>Create personal project repo from template</td>
+            <td><strong>Students</strong> (in-class Git lesson)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <strong>Key change from previous setup:</strong> IT no longer needs to
+        manually create or seed the starter project files on each machine. The
+        instructor pushes the starter project to a GitHub repository (main
+        branch), and students clone it during a dedicated Git class. This means
+        fewer brittle PowerShell scripts for IT and a real Git workflow for
+        students from day one.
+      </div>
+
+      <hr />
+
+      <!-- Phase 1 -->
+      <span class="phase-label">Phase 1 — IT</span>
+      <h2>Per-Machine Setup</h2>
+
+      <h3>Step 1 — Install All Software</h3>
+      <p>
+        Run in an <strong>elevated (administrator) PowerShell</strong> window.
+        Copy and paste the entire block.
+      </p>
+      <pre><code># Install Chocolatey if not already installed
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install all software
+choco install nodejs-lts -y
+choco install git -y
+choco install vscode -y
+choco install gimp --version=2.10.38 -y
+choco install audacity -y
+choco install tiled -y
+choco install googlechrome -y</code></pre>
+
+      <h3>Step 2 — Install VS Code Extensions</h3>
+      <div class="warn">
+        Close PowerShell and reopen with admin privileges before running.
+        Machine may need a reboot beforehand.
+      </div>
+      <p>Copy and paste the entire block.</p>
+      <pre><code>code --install-extension GitHub.copilot
+code --install-extension GitHub.copilot-chat
+code --install-extension ritwickdey.LiveServer
+code --install-extension esbenp.prettier-vscode</code></pre>
+
+      <h3>Step 3 — Verify Installs</h3>
+      <p>
+        <strong>Via Command Prompt</strong> — open Command Prompt and run each
+        line separately:
+      </p>
+      <pre><code>node --version
+npm --version
+git --version</code></pre>
+      <p>
+        All three should return a version number. If any say "not recognized,"
+        re-run the Chocolatey install for that package.
+      </p>
+
+      <p>
+        <strong>Via Start Menu</strong> — press the Windows key and confirm each
+        of these opens:
+      </p>
+      <ul>
+        <li>Chrome</li>
+        <li>GIMP</li>
+        <li>Audacity</li>
+        <li>Tiled</li>
+      </ul>
+
+      <p>
+        <strong>VS Code Extensions</strong> — open VS Code, click the Extensions
+        icon (four squares, left sidebar). Confirm installed and enabled:
+      </p>
+      <ul>
+        <li>GitHub Copilot</li>
+        <li>GitHub Copilot Chat</li>
+        <li>Live Server</li>
+        <li>Prettier</li>
+      </ul>
+
+      <p><strong>Live Server Smoke Test</strong></p>
+      <ol>
+        <li>Open VS Code</li>
+        <li>File → New File → save as <code>test.html</code> anywhere</li>
+        <li>Paste in: <code>&lt;h1&gt;Live Server works&lt;/h1&gt;</code></li>
+        <li>
+          Right-click the file tab → <strong>Open with Live Server</strong>
+        </li>
+        <li>Chrome should open and display the heading</li>
+      </ol>
+      <div class="note">
+        If Chrome doesn't open, check that port 5500 is not blocked locally.
+        Delete the test file when done. You do not need to test a full game
+        project — students will clone the real starter project during the Git
+        class.
+      </div>
+
+      <hr />
+
+      <!-- Network Requirements -->
+      <span class="phase-label">IT — Submit to Network Admin</span>
+      <h2>Network Requirements</h2>
+      <p>
+        The following outbound <strong>HTTPS (port 443)</strong> connections
+        must be allowed.
+        <strong
+          >Submit this list at least 2 weeks before the course start
+          date.</strong
+        >
+        Ticket turnaround is typically 5–10 business days.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>github.com</code></td>
+            <td>Git clone, repositories, student account creation</td>
+          </tr>
+          <tr>
+            <td><code>api.github.com</code></td>
+            <td>GitHub Copilot</td>
+          </tr>
+          <tr>
+            <td><code>copilot.github.com</code></td>
+            <td>GitHub Copilot AI</td>
+          </tr>
+          <tr>
+            <td><code>objects.githubusercontent.com</code></td>
+            <td>GitHub file downloads / Copilot</td>
+          </tr>
+          <tr>
+            <td><code>education.github.com</code></td>
+            <td>Student GitHub Education verification</td>
+          </tr>
+          <tr>
+            <td><code>classroom.github.com</code></td>
+            <td>GitHub Classroom (used by instructor)</td>
+          </tr>
+          <tr>
+            <td><code>registry.npmjs.org</code></td>
+            <td>npm packages</td>
+          </tr>
+          <tr>
+            <td><code>marketplace.visualstudio.com</code></td>
+            <td>VS Code extension installs</td>
+          </tr>
+          <tr>
+            <td><code>*.gallerycdn.vsassets.io</code></td>
+            <td>VS Code extension downloads (CDN)</td>
+          </tr>
+          <tr>
+            <td><code>vscode.blob.core.windows.net</code></td>
+            <td>VS Code updates</td>
+          </tr>
+          <tr>
+            <td><code>itch.io</code></td>
+            <td>Asset browsing</td>
+          </tr>
+          <tr>
+            <td><code>*.itch.zone</code></td>
+            <td>
+              itch.io asset file downloads (CDN) —
+              <strong>required separately from itch.io</strong>
+            </td>
+          </tr>
+          <tr>
+            <td><code>community.chocolatey.org</code></td>
+            <td>Chocolatey installs (only needed during IT imaging)</td>
+          </tr>
+          <tr>
+            <td><code>piskelapp.com</code></td>
+            <td>Piskel sprite editor download</td>
+          </tr>
+          <tr>
+            <td><code>classroom.google.com</code></td>
+            <td>Google Classroom — instructor pre-class assignments</td>
+          </tr>
+          <tr>
+            <td><code>gemini.google.com</code></td>
+            <td>
+              Nano Banana image generation tool (age-gated features may not
+              function for minors)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>No inbound ports need to be opened.</strong> Live Server runs on
+        localhost only.
+      </p>
+      <div class="warn">
+        <strong>Content Filtering Note:</strong> <code>itch.io</code> is
+        frequently blocked by default as a gaming site. Submit an explicit
+        unblock request for both <code>itch.io</code> AND
+        <code>*.itch.zone</code> — asset downloads will silently fail if only
+        one is unblocked. GitHub Copilot API endpoints may be flagged by DLP
+        rules; confirm <code>copilot.github.com</code> and
+        <code>api.github.com</code> are fully unblocked.
+      </div>
+
+      <hr />
+
+      <!-- Phase 2 -->
+      <span class="phase-label instructor">Phase 2 — Instructor</span>
+      <h2>Instructor Pre-Work (Before Day 1)</h2>
+      <p>
+        IT does not handle this. Listed here so IT knows what the instructor is
+        responsible for.
+      </p>
+      <ul>
+        <li>
+          <strong>StarterProject is already on GitHub</strong> at
+          <a href="https://github.com/sgoodale-collab/StarterProject"
+            >https://github.com/sgoodale-collab/StarterProject</a
+          >
+          and is configured as a <strong>Template repository</strong>. Students
+          create their own personal copy using the “Use this template” button
+          (Phase 3 pre-work) — they never clone or push to the instructor’s repo
+          directly.
+        </li>
+        <li>
+          <strong>Set up GitHub Classroom</strong> (via
+          <a href="https://classroom.github.com">classroom.github.com</a>) using
+          the GitHub Education for Teachers account to assign the starter repo
+          to students — not yet configured as of this version.
+        </li>
+        <li>
+          <strong>Post pre-class tasks to Google Classroom</strong> (see Phase 3
+          below). Students should complete GitHub signup and GitHub Education
+          verification <em>before</em> Day 1 of the Git lesson.
+        </li>
+      </ul>
+
+      <hr />
+
+      <!-- Phase 3 -->
+      <span class="phase-label students">Phase 3 — Students</span>
+      <h2>Student Pre-Work (Assigned via Google Classroom)</h2>
+      <p>
+        IT does not need to be present. Instructor assigns these steps through
+        Google Classroom before the Git lesson day.
+      </p>
+
+      <h3>1. Create a GitHub account (if not already done)</h3>
+      <ul>
+        <li>
+          Go to
+          <a href="https://github.com/signup">https://github.com/signup</a>
+        </li>
+        <li>Must use school email</li>
+      </ul>
+      <div class="warn">
+        GitHub requires users to be 13+. Students under 18 should have a parent
+        or guardian review GitHub's Terms of Service.
+      </div>
+
+      <h3>2. Apply for GitHub Education (free Copilot access)</h3>
+      <ul>
+        <li>
+          Go to
+          <a href="https://education.github.com/students"
+            >https://education.github.com/students</a
+          >
+        </li>
+        <li>Submit verification with school email or student ID</li>
+      </ul>
+      <div class="warn">
+        Approval can take 24 hours to 2 weeks. Do not count on Copilot being
+        active on Day 1. If approval is delayed for multiple students, the
+        instructor can use a GitHub Education for Teachers organization license
+        to grant Copilot access to the whole class immediately.
+      </div>
+
+      <hr />
+
+      <!-- Phase 4 -->
+      <span class="phase-label students">Phase 4 — Students (In Class)</span>
+      <h2>Git Class — Instructor-Led</h2>
+      <p>
+        <strong>Estimated time: 45–60 minutes.</strong> Students end up with a
+        real Git repo connected to GitHub from the very first day.
+      </p>
+
+      <h3>1. Sign in to GitHub in VS Code</h3>
+      <ul>
+        <li>Open VS Code</li>
+        <li>Click the <strong>Accounts icon</strong> (bottom-left)</li>
+        <li>Sign in with GitHub account</li>
+        <li>
+          GitHub Copilot activates automatically once Education is approved
+        </li>
+      </ul>
+
+      <h3>2. Configure Git identity (one-time)</h3>
+      <p>Open the terminal in VS Code (View → Terminal) and run:</p>
+      <pre><code>git config --global user.name "yourusername"
+git config --global user.email "you@school.edu"</code></pre>
+      <p>
+        To find your username and email: go to github.com, sign in, click your
+        profile picture → <strong>Settings</strong> → <strong>Emails</strong>.
+      </p>
+      <div class="note">
+        Git uses these values to label commits. Using your GitHub username and
+        email ensures commits link properly to your GitHub profile when students
+        push their projects later.
+      </div>
+
+      <h3>3. Create your project from the template</h3>
+      <ul>
+        <li>
+          Go to
+          <a href="https://github.com/sgoodale-collab/StarterProject"
+            >https://github.com/sgoodale-collab/StarterProject</a
+          >
+          and sign in
+        </li>
+        <li>
+          Click the green <strong>Use this template</strong> button →
+          <strong>Create a new repository</strong>
+        </li>
+        <li>
+          Choose a name for your project (e.g.,
+          <code>MyPlatformerGame</code> — no spaces)
+        </li>
+        <li>
+          Set it to <strong>Public</strong> or <strong>Private</strong> (your
+          choice)
+        </li>
+        <li>Click <strong>Create repository</strong></li>
+        <li>
+          Copy the HTTPS URL of your new repo (e.g.,
+          <code>https://github.com/yourusername/MyPlatformerGame.git</code>)
+        </li>
+      </ul>
+
+      <h3>4. Clone your project</h3>
+      <p>
+        Use the HTTPS URL of your own repo that you just created. Copy and paste
+        <strong>both lines together</strong> into the VS Code terminal:
+      </p>
+      <pre><code>cd Documents
+git clone https://github.com/yourusername/MyPlatformerGame.git</code></pre>
+      <p>
+        Replace <code>yourusername</code> and <code>MyPlatformerGame</code> with
+        your actual values. When complete, a folder named after your project
+        will appear in <code>Documents</code>.
+      </p>
+
+      <h3>5. Open the cloned project</h3>
+      <ul>
+        <li>In VS Code: <strong>File → Open Folder</strong></li>
+        <li>
+          Navigate to <code>Documents</code> → your project folder and select it
+        </li>
+      </ul>
+
+      <h3>6. Install Phaser (npm install)</h3>
+      <p>
+        The cloned repo does not include <code>node_modules</code>. Run this
+        once in the VS Code terminal:
+      </p>
+      <pre><code>npm install</code></pre>
+
+      <h3>7. Verify Live Server works</h3>
+      <ul>
+        <li>In VS Code, open <code>index.html</code></li>
+        <li>Right-click → <strong>Open with Live Server</strong></li>
+        <li>Chrome should open and display the game</li>
+      </ul>
+      <div class="warn">
+        If the browser does not open or the page is blank, notify the instructor
+        — this usually means a network port-blocking issue IT needs to resolve.
+      </div>
+
+      <hr />
+
+      <!-- Phase 5 -->
+      <span class="phase-label students">Phase 5 — Students (Ongoing)</span>
+      <h2>Saving and Accessing Your Work</h2>
+      <p>
+        Since you cloned your own repo in Phase 4, pushing to GitHub is already
+        set up — no extra configuration needed.
+      </p>
+
+      <h3>1. Save your work to GitHub (do this regularly)</h3>
+      <p>
+        In VS Code, open Copilot Chat (the chat icon in the left sidebar) and
+        type:
+      </p>
+      <pre><code>Save and push my changes to GitHub</code></pre>
+      <p>
+        Copilot will run the necessary commands for you. If it asks for a commit
+        message, describe what you changed (e.g., “added spikes to level 1”).
+      </p>
+
+      <div class="warn">
+        <strong
+          >Advanced — Accessing your project from another computer.</strong
+        >
+        This is an advanced technique for working on your project outside of
+        school computers. Most students won’t need this. If you want to work
+        from home or a different machine, open Copilot Chat on that computer and
+        type:
+        <em
+          >"Help me clone my project from GitHub so I can work on it here."</em
+        >
+        Copilot will walk you through the steps. You’ll need your GitHub repo
+        URL (find it at <a href="https://github.com">github.com</a> under your
+        repositories).
+      </div>
+
+      <hr />
+
+      <!-- Additional Notes -->
+      <span class="phase-label instructor">Instructor Notes</span>
+      <h2>Additional Notes</h2>
+      <ul>
+        <li>
+          <strong>Disk space:</strong> Monitor student
+          <code>Documents\StarterProject</code> folder size during weeks 2–3.
+          Uncompressed audio and art assets can accumulate. Remind students to
+          delete unused asset copies.
+        </li>
+        <li>
+          <strong>Template repo:</strong> The StarterProject is configured as a
+          GitHub Template repository. Each student creates their own copy via
+          “Use this template” during the in-class Git lesson — they own that
+          repo from day one and can push freely without touching the
+          instructor’s repo. If you later move to GitHub Classroom, you can use
+          the same template repo as the Classroom assignment source.
+        </li>
+      </ul>
+    </div>
+    <!-- /.page -->
+  </body>
+</html>

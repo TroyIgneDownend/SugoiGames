@@ -1,0 +1,6 @@
+﻿{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "liveServer.settings.donotShowInfoMsg": true,
+  "telemetry.telemetryLevel": "off"
+}
