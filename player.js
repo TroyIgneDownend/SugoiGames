@@ -112,12 +112,16 @@ function playerCreate(scene, x, y, groundLayer) {
     repeat: 0,
   });
 
+  // Initialize pogo boost
+  player.pogoBoost = 0;
+  player.pogoWindowEndTime = 0; // timestamp for pogo input window
+
   return player;
 }
 
 // ── Movement + animation each frame ────────────
 // Called from update() in game.js.
-function playerUpdate(player, cursors) {
+function playerUpdate(player, cursors, pogoKey) {
   var onGround = player.body.blocked.down; // true when standing on a tile
   var crouching = cursors.down.isDown && onGround; // crouch only while on ground
 
@@ -150,6 +154,39 @@ function playerUpdate(player, cursors) {
   // Play jump sound once per keypress (JustDown prevents repeating every frame)
   if (Phaser.Input.Keyboard.JustDown(cursors.up) && onGround) {
     player.scene.sound.play("jump-sfx");
+  }
+
+  // Pogo mechanic: buffer E press, pogo on landing within 0.2s
+  if (!onGround && Phaser.Input.Keyboard.JustDown(pogoKey)) {
+    // Start 0.2s window for pogo on landing
+    player.pogoWindowEndTime = player.scene.time.now + 200; // 200ms window
+  }
+
+  // Check for landing within window
+  if (onGround && player.pogoWindowEndTime > player.scene.time.now) {
+    // Pogo: regain jump and speed boost
+    player.setVelocityY(PLAYER_JUMP);
+    
+    // Speed boost: 3x current speed (at time of landing)
+    var currentX = player.body.velocity.x;
+    if (currentX !== 0) {
+      player.pogoBoost = currentX * 2.0; // additional velocity to reach 3x
+    } else {
+      // If not moving, boost in facing direction
+      player.pogoBoost = player.flipX ? -PLAYER_SPEED * 2.0 : PLAYER_SPEED * 2.0;
+    }
+    
+    // Reset window
+    player.pogoWindowEndTime = 0;
+  }
+
+  // Apply and decay pogo boost
+  if (player.pogoBoost !== 0) {
+    player.setVelocityX(player.body.velocity.x + player.pogoBoost);
+    player.pogoBoost *= 0.96; // decay over ~90 frames (~1.5s at 60fps)
+    if (Math.abs(player.pogoBoost) < 1) {
+      player.pogoBoost = 0; // stop when negligible
+    }
   }
 
   // Play the right animation based on what the player is doing

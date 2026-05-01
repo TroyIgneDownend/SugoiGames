@@ -31,7 +31,10 @@ function preload() {
   this.load.image("apple", "assets/2d/Items/Fruits/Apple_idle.png");
 
   // Pickup sound effect
-  this.load.audio("pickup-sfx", "assets/audio/GameSFX/PickUp/Retro PickUp Coin 07.wav");
+  this.load.audio(
+    "pickup-sfx",
+    "assets/audio/GameSFX/PickUp/Retro PickUp Coin 07.wav",
+  );
 
   // Player assets — defined in player.js
   playerPreload(this);
@@ -74,7 +77,7 @@ function create() {
       var sprite = pickupGroup.create(
         obj.x + obj.width / 2,
         obj.y - obj.height / 2,
-        "apple"
+        "apple",
       );
       // Read health_points from object properties if present, otherwise default to 10
       var hp = 10;
@@ -92,63 +95,199 @@ function create() {
   var scene = this;
 
   // When the player overlaps an apple, flash it, remove it, and show popup text
-  this.physics.add.overlap(player, pickupGroup, function (playerSprite, pickup) {
-    var hp = pickup.healthPoints;
-    var worldX = pickup.x;
-    var worldY = pickup.y;
+  this.physics.add.overlap(
+    player,
+    pickupGroup,
+    function (playerSprite, pickup) {
+      var hp = pickup.healthPoints;
+      var worldX = pickup.x;
+      var worldY = pickup.y;
 
-    // Disable physics body so this callback can't fire again for the same apple
-    pickup.body.enable = false;
+      // Disable physics body so this callback can't fire again for the same apple
+      pickup.body.enable = false;
 
-    // Play the pickup sound
-    scene.sound.play("pickup-sfx");
+      // Play the pickup sound
+      scene.sound.play("pickup-sfx");
 
-    // Flash the apple: quickly blink alpha 3 times, then destroy it
-    scene.tweens.add({
-      targets: pickup,
-      alpha: 0,
-      duration: 80,       // each half-blink is 80ms
-      yoyo: true,         // bounce back to alpha 1
-      repeat: 2,          // 3 full blinks total
-      onComplete: function () {
-        pickup.destroy();
-      }
-    });
+      // Flash the apple: quickly blink alpha 3 times, then destroy it
+      scene.tweens.add({
+        targets: pickup,
+        alpha: 0,
+        duration: 80, // each half-blink is 80ms
+        yoyo: true, // bounce back to alpha 1
+        repeat: 2, // 3 full blinks total
+        onComplete: function () {
+          pickup.destroy();
+        },
+      });
 
-    // Show "+N Health!" text floating up from the apple's position, then fade out
-    var popupText = scene.add.text(worldX, worldY - 20, "+" + hp + " Health!", {
-      fontSize: "22px",
-      color: "#00ff44",
-      stroke: "#000000",
-      strokeThickness: 4
-    }).setOrigin(0.5, 1);
+      // Show "+N Health!" text floating up from the apple's position, then fade out
+      var popupText = scene.add
+        .text(worldX, worldY - 20, "+" + hp + " Health!", {
+          fontSize: "22px",
+          color: "#00ff44",
+          stroke: "#000000",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5, 1);
 
-    scene.tweens.add({
-      targets: popupText,
-      y: worldY - 80,     // floats upward
-      alpha: 0,
-      duration: 1200,     // 1.2 seconds — long enough to read, quick enough to feel snappy
-      ease: "Power1",
-      onComplete: function () {
-        popupText.destroy();
-      }
-    });
-  });
+      scene.tweens.add({
+        targets: popupText,
+        y: worldY - 80, // floats upward
+        alpha: 0,
+        duration: 1200, // 1.2 seconds — long enough to read, quick enough to feel snappy
+        ease: "Power1",
+        onComplete: function () {
+          popupText.destroy();
+        },
+      });
+    },
+  );
   // ─────────────────────────────────────────────
 
-  // Camera follows the player and stays within the map
+  // Camera snap settings (instead of smooth follow)
+  this.CAMERA_SNAP_DISTANCE_X = 700; // pixels to move camera horizontally (slightly less than full screen)
+  this.CAMERA_SNAP_DISTANCE_Y = 350; // pixels to move camera vertically (slightly less than full screen)
+  this.EDGE_THRESHOLD = 40; // how close to screen edge triggers snap (reduced for less sensitivity)
+  this.DEADZONE = 50; // unused but kept for tuning if needed
+  this.CAMERA_SNAP_COOLDOWN = 1000; // milliseconds to wait after a snap before allowing another
+
   this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-  this.cameras.main.startFollow(player);
   this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+  // Snap camera state: require leaving the edge zone before being able to snap again
+  var camera = this.cameras.main;
+  this.cameraSnapState = {
+    isRightReady:
+      player.x <= camera.scrollX + camera.width - this.EDGE_THRESHOLD,
+    isLeftReady: player.x >= camera.scrollX + this.EDGE_THRESHOLD,
+    isDownReady:
+      player.y <= camera.scrollY + camera.height - this.EDGE_THRESHOLD,
+    isUpReady: player.y >= camera.scrollY + this.EDGE_THRESHOLD,
+    lastSnapTime: 0, // timestamp of last snap
+  };
 
   // Arrow key input
   this.cursors = this.input.keyboard.createCursorKeys();
 
+  // E key for pogo mechanic
+  this.pogoKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+
+  // Debug text for player coordinates
+  this.debugText = this.add
+    .text(0, 0, "", {
+      fontSize: "16px",
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 2,
+    })
+    .setScrollFactor(0); // Fixed to camera, doesn't scroll with world
+
   // Attach to the scene so update() can access them
   this.player = player;
+  this.map = map;
 }
 
 function update() {
   // Movement and animation — defined in player.js
-  playerUpdate(this.player, this.cursors);
+  playerUpdate(this.player, this.cursors, this.pogoKey);
+
+  // Update debug text with player coordinates
+  var camera = this.cameras.main;
+  this.debugText.setPosition(camera.width - 120, 10); // Top right corner, moved left for visibility
+  this.debugText.setText(
+    "X: " + Math.round(this.player.x) + "\nY: " + Math.round(this.player.y),
+  );
+
+  // ── Snap Camera Logic ──────────────────────────────
+  // Camera snaps when player reaches screen edge; deadzone prevents bouncing
+  var scene = this;
+  var player = scene.player;
+  var camera = scene.cameras.main;
+  var map = scene.map;
+
+  // Camera viewport edges
+  var view = camera.worldView;
+  var rightEdge = view.right - scene.EDGE_THRESHOLD;
+  var leftEdge = view.left + scene.EDGE_THRESHOLD;
+  var downEdge = view.bottom - scene.EDGE_THRESHOLD;
+  var upEdge = view.top + scene.EDGE_THRESHOLD;
+
+  var currentTime = scene.time.now;
+  var canSnap =
+    currentTime - scene.cameraSnapState.lastSnapTime >
+    scene.CAMERA_SNAP_COOLDOWN;
+
+  // RIGHT edge: player beyond right threshold
+  if (player.x > rightEdge && canSnap) {
+    if (scene.cameraSnapState.isRightReady) {
+      var targetScrollX = Math.min(
+        camera.scrollX + scene.CAMERA_SNAP_DISTANCE_X,
+        map.widthInPixels - camera.width,
+      );
+      if (targetScrollX > camera.scrollX) {
+        camera.scrollX = targetScrollX;
+        scene.cameraSnapState.isRightReady = false;
+        scene.cameraSnapState.lastSnapTime = currentTime;
+      }
+    }
+  } else if (player.x < rightEdge - scene.DEADZONE) {
+    // Player moved away from right threshold zone
+    scene.cameraSnapState.isRightReady = true;
+  }
+
+  // LEFT edge: player beyond left threshold
+  if (player.x < leftEdge && canSnap) {
+    if (scene.cameraSnapState.isLeftReady) {
+      var targetScrollX = Math.max(
+        camera.scrollX - scene.CAMERA_SNAP_DISTANCE_X,
+        0,
+      );
+      if (targetScrollX < camera.scrollX) {
+        camera.scrollX = targetScrollX;
+        scene.cameraSnapState.isLeftReady = false;
+        scene.cameraSnapState.lastSnapTime = currentTime;
+      }
+    }
+  } else if (player.x > leftEdge + scene.DEADZONE) {
+    // Player moved away from left threshold zone
+    scene.cameraSnapState.isLeftReady = true;
+  }
+
+  // DOWN edge: player beyond down threshold
+  if (player.y > downEdge && canSnap) {
+    if (scene.cameraSnapState.isDownReady) {
+      var targetScrollY = Math.min(
+        camera.scrollY + scene.CAMERA_SNAP_DISTANCE_Y,
+        map.heightInPixels - camera.height,
+      );
+      if (targetScrollY > camera.scrollY) {
+        camera.scrollY = targetScrollY;
+        scene.cameraSnapState.isDownReady = false;
+        scene.cameraSnapState.lastSnapTime = currentTime;
+      }
+    }
+  } else if (player.y < downEdge - scene.DEADZONE) {
+    // Player moved away from down threshold zone
+    scene.cameraSnapState.isDownReady = true;
+  }
+
+  // UP edge: player beyond up threshold
+  if (player.y < upEdge && canSnap) {
+    if (scene.cameraSnapState.isUpReady) {
+      var targetScrollY = Math.max(
+        camera.scrollY - scene.CAMERA_SNAP_DISTANCE_Y,
+        0,
+      );
+      if (targetScrollY < camera.scrollY) {
+        camera.scrollY = targetScrollY;
+        scene.cameraSnapState.isUpReady = false;
+        scene.cameraSnapState.lastSnapTime = currentTime;
+      }
+    }
+  } else if (player.y > upEdge + scene.DEADZONE) {
+    // Player moved away from up threshold zone
+    scene.cameraSnapState.isUpReady = true;
+  }
+  // ─────────────────────────────────────────────────
 }
