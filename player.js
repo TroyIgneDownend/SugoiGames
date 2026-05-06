@@ -4,8 +4,8 @@
 // ─────────────────────────────────────────────
 
 // ── Tuning values ──────────────────────────────
-var PLAYER_SPEED = 220; // horizontal move speed (pixels/sec)
-var PLAYER_JUMP = -500; // jump velocity — more negative = higher jump
+var PLAYER_SPEED = 165; // horizontal move speed (pixels/sec)
+var PLAYER_JUMP = -353; // jump velocity — more negative = higher jump
 var PLAYER_CHAR = "Pink Man"; // folder name inside assets/2d/Main Characters/
 
 // Hitbox size — smaller than the 32x32 sprite frame to avoid snagging on tile corners
@@ -20,6 +20,15 @@ var PLAYER_HITBOX_OFFSET_Y = 4; // shift down  to align feet with the bottom of 
 // Rule: CROUCH_OFFSET_Y = HITBOX_OFFSET_Y + (HITBOX_HEIGHT - CROUCH_HEIGHT)
 var PLAYER_CROUCH_HEIGHT = 16; // pixels tall while crouching
 var PLAYER_CROUCH_OFFSET_Y = 16; // = 4 + (28 - 16)
+
+// Attack mechanic — triggered by E key
+var ATTACK_DAMAGE = 1; // base damage dealt to enemies
+var ATTACK_SPEED = 3; // attacks per second (cooldown = 1/3 = 0.333s)
+var ATTACK_DURATION = 0.3; // seconds that the red flash displays
+var ATTACK_HITBOX_WIDTH = 30; // pixels wide
+var ATTACK_HITBOX_HEIGHT = 30; // pixels tall
+var ATTACK_RANGE = 16; // distance ahead of player center to place hitbox (roughly 1 tile)
+var POGO_BOOST = 206; // extra horizontal speed burst added on a successful pogo
 
 // ── Asset loading ──────────────────────────────
 // Called from preload() in game.js
@@ -116,14 +125,70 @@ function playerCreate(scene, x, y, groundLayer) {
   player.pogoBoost = 0;
   player.pogoWindowEndTime = 0; // timestamp for pogo input window
 
+  // Initialize attack state
+  player.isAttacking = false; // locked during attack animation
+  player.attackCooldownEnd = 0; // timestamp when cooldown expires
+
   return player;
 }
 
 // ── Movement + animation each frame ────────────
 // Called from update() in game.js.
-function playerUpdate(player, cursors, pogoKey) {
+function playerUpdate(player, cursors, attackKey) {
   var onGround = player.body.blocked.down; // true when standing on a tile
   var crouching = cursors.down.isDown && onGround; // crouch only while on ground
+  var attackKeyJustPressed = Phaser.Input.Keyboard.JustDown(attackKey); // Check key once to avoid consuming it
+
+  // ── Attack mechanic ────────────────────────────
+  // Check if E key was just pressed on ground and attack is off cooldown
+  if (attackKeyJustPressed && !player.isAttacking && player.scene.time.now >= player.attackCooldownEnd && onGround) {
+    // Start attack state
+    player.isAttacking = true;
+    player.setTint(0xff6b6b); // red tint for 0.3 seconds
+
+    // Calculate hitbox position: 1 tile ahead in the facing direction
+    var hitboxX = player.flipX ? player.x - ATTACK_RANGE : player.x + ATTACK_RANGE;
+    var hitboxY = player.y;
+
+    // Create a temporary damage hitbox (invisible rectangle for overlap detection)
+    var attackHitbox = player.scene.add.rectangle(hitboxX, hitboxY, ATTACK_HITBOX_WIDTH, ATTACK_HITBOX_HEIGHT);
+    attackHitbox.damage = ATTACK_DAMAGE;
+    attackHitbox.isAttackHitbox = true;
+    player.scene.physics.world.enable(attackHitbox);
+    attackHitbox.body.setCollideWorldBounds(false); // hitbox doesn't collide with world
+
+    // Schedule end of attack: reset color, remove hitbox, allow input again
+    player.scene.time.delayedCall(ATTACK_DURATION * 1000, function () {
+      player.isAttacking = false;
+      player.clearTint(); // remove red tint
+      attackHitbox.destroy();
+    });
+
+    // Set cooldown: next attack allowed after attack speed interval
+    player.attackCooldownEnd = player.scene.time.now + (1000 / ATTACK_SPEED);
+  }
+
+  // ── Pogo mechanic: buffer E press while in air, pogo on landing within 0.2s ──
+  // Attack (ground) and pogo (air) already can't conflict since their conditions are mutually exclusive.
+  if (!onGround && attackKeyJustPressed) {
+    player.pogoWindowEndTime = player.scene.time.now + 200; // 200ms window to land
+  }
+
+  // Check for landing within window
+  if (onGround && player.pogoWindowEndTime > player.scene.time.now) {
+    // Pogo: regain jump
+    player.setVelocityY(PLAYER_JUMP);
+
+    // Apply horizontal boost in the direction the player is already moving
+    if (player.body.velocity.x > 0) {
+      player.pogoBoost = POGO_BOOST;
+    } else if (player.body.velocity.x < 0) {
+      player.pogoBoost = -POGO_BOOST;
+    }
+
+    // Reset window
+    player.pogoWindowEndTime = 0;
+  }
 
   // Resize hitbox based on crouch state.
   // offsetY must increase when height shrinks to keep feet planted.
@@ -135,49 +200,28 @@ function playerUpdate(player, cursors, pogoKey) {
     player.body.setOffset(PLAYER_HITBOX_OFFSET_X, PLAYER_HITBOX_OFFSET_Y);
   }
 
-  // Left / right movement — blocked while crouching
-  if (!crouching && cursors.left.isDown) {
+  // Left / right movement — blocked while attacking or crouching
+  if (!player.isAttacking && !crouching && cursors.left.isDown) {
     player.setVelocityX(-PLAYER_SPEED);
     player.setFlipX(true); // face left
-  } else if (!crouching && cursors.right.isDown) {
+  } else if (!player.isAttacking && !crouching && cursors.right.isDown) {
     player.setVelocityX(PLAYER_SPEED);
     player.setFlipX(false); // face right
-  } else {
+  } else if (!player.isAttacking) {
+    player.setVelocityX(0);
+  } else if (player.isAttacking) {
+    // Cancel all movement during attack
     player.setVelocityX(0);
   }
 
-  // Jump — allowed from both standing and crouching
-  if (cursors.up.isDown && onGround) {
+  // Jump — allowed from both standing and crouching (but not during attack)
+  if (!player.isAttacking && cursors.up.isDown && onGround) {
     player.setVelocityY(PLAYER_JUMP);
   }
 
   // Play jump sound once per keypress (JustDown prevents repeating every frame)
   if (Phaser.Input.Keyboard.JustDown(cursors.up) && onGround) {
     player.scene.sound.play("jump-sfx");
-  }
-
-  // Pogo mechanic: buffer E press, pogo on landing within 0.2s
-  if (!onGround && Phaser.Input.Keyboard.JustDown(pogoKey)) {
-    // Start 0.2s window for pogo on landing
-    player.pogoWindowEndTime = player.scene.time.now + 200; // 200ms window
-  }
-
-  // Check for landing within window
-  if (onGround && player.pogoWindowEndTime > player.scene.time.now) {
-    // Pogo: regain jump and speed boost
-    player.setVelocityY(PLAYER_JUMP);
-    
-    // Speed boost: 3x current speed (at time of landing)
-    var currentX = player.body.velocity.x;
-    if (currentX !== 0) {
-      player.pogoBoost = currentX * 2.0; // additional velocity to reach 3x
-    } else {
-      // If not moving, boost in facing direction
-      player.pogoBoost = player.flipX ? -PLAYER_SPEED * 2.0 : PLAYER_SPEED * 2.0;
-    }
-    
-    // Reset window
-    player.pogoWindowEndTime = 0;
   }
 
   // Apply and decay pogo boost
@@ -190,24 +234,27 @@ function playerUpdate(player, cursors, pogoKey) {
   }
 
   // Play the right animation based on what the player is doing
-  if (!onGround) {
-    if (player.body.velocity.y < 0) {
-      player.anims.play("jump", true);
+  // During attack, hold current animation (player is locked)
+  if (!player.isAttacking) {
+    if (!onGround) {
+      if (player.body.velocity.y < 0) {
+        player.anims.play("jump", true);
+      } else {
+        player.anims.play("fall", true);
+      }
+    } else if (crouching) {
+      // Only call play() when first entering crouch — once the 3 frames finish,
+      // Phaser holds on the last frame. Re-calling play() would restart the drop.
+      if (
+        !player.anims.currentAnim ||
+        player.anims.currentAnim.key !== "crouch"
+      ) {
+        player.anims.play("crouch");
+      }
+    } else if (cursors.left.isDown || cursors.right.isDown) {
+      player.anims.play("run", true);
     } else {
-      player.anims.play("fall", true);
+      player.anims.play("idle", true);
     }
-  } else if (crouching) {
-    // Only call play() when first entering crouch — once the 3 frames finish,
-    // Phaser holds on the last frame. Re-calling play() would restart the drop.
-    if (
-      !player.anims.currentAnim ||
-      player.anims.currentAnim.key !== "crouch"
-    ) {
-      player.anims.play("crouch");
-    }
-  } else if (cursors.left.isDown || cursors.right.isDown) {
-    player.anims.play("run", true);
-  } else {
-    player.anims.play("idle", true);
   }
 }

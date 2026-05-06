@@ -1,7 +1,7 @@
 ﻿var config = {
   type: Phaser.AUTO,
   width: 800,
-  height: 400,
+  height: 304,
   backgroundColor: "#1a1a2e",
   physics: {
     default: "arcade",
@@ -23,9 +23,11 @@ function preload() {
   // Background grid texture
   this.load.image("grid", "assets/2d/Background/Grid.png");
 
-  // Tiled map and tileset image
-  this.load.tilemapTiledJSON("level1", "maps/level1.tmj");
-  this.load.image("terrain", "assets/2d/Terrain/Terrain (16x16).png");
+  // Tiled map and tileset images
+  this.load.tilemapTiledJSON("level1", "maps/level1+2nd(backup).tmj");
+  this.load.image("Grassland_Terrain_47Tiles", "assets/2d/Terrain/Grassland_Terrain_47Tiles.png");
+  this.load.image("Grassland_Terrain_BgdTiles", "assets/2d/Terrain/Grassland_Terrain_BgdTiles.png");
+  this.load.image("Grassland_Terrain_ExtraTiles", "assets/2d/Terrain/Grassland_Terrain_ExtraTiles.png");
 
   // Apple pickup image
   this.load.image("apple", "assets/2d/Items/Fruits/Apple_idle.png");
@@ -43,35 +45,50 @@ function preload() {
 function create() {
   // Build the tilemap from the loaded JSON file
   var map = this.make.tilemap({ key: "level1" });
-  // 'Terrain' must match the tileset name inside level1.tmj
-  var tileset = map.addTilesetImage("Terrain", "terrain");
+
+  // Add all three tilesets — names must match what's inside level1+2nd(backup).tmj
+  var tileset47     = map.addTilesetImage("Grassland_Terrain_47Tiles",    "Grassland_Terrain_47Tiles");
+  var tilesetBgd    = map.addTilesetImage("Grassland_Terrain_BgdTiles",   "Grassland_Terrain_BgdTiles");
+  var tilesetExtra  = map.addTilesetImage("Grassland_Terrain_ExtraTiles", "Grassland_Terrain_ExtraTiles");
+  var allTilesets   = [tileset47, tilesetBgd, tilesetExtra];
 
   // Grid background — added first so it renders behind everything
   this.add
     .tileSprite(0, 0, map.widthInPixels, map.heightInPixels, "grid")
     .setOrigin(0, 0);
 
-  // Ground tile layer — all non-empty tiles get collision
-  var groundLayer = map.createLayer("ground", tileset, 0, 0);
-  groundLayer.setCollisionByExclusion([-1]);
+  // Ground tile layer — background only, no collision
+  var groundLayer = map.createLayer("Tile Layer 1", allTilesets, 0, 0);
+
+  // Middle layer — full solid collision on all sides
+  var platformLayer = map.createLayer("middle layer", allTilesets, 0, 0);
+  platformLayer.setCollisionByExclusion([-1]);
 
   // Raise the tile collision bias to match tile size (16px).
   // This prevents the player from snagging on tile corners while moving horizontally.
   this.physics.world.TILE_BIAS = 32;
 
-  // Read the spawn position from the Tiled object layer
+  // Read the spawn position from the Tiled object layer, fall back to (100, 200)
+  var spawn = { x: 100, y: 200 };
   var spawnLayer = map.getObjectLayer("spawnpoints");
-  var spawn = spawnLayer.objects.find(function (obj) {
-    return obj.name === "player";
-  });
+  if (spawnLayer) {
+    var spawnObj = spawnLayer.objects.find(function (obj) {
+      return obj.name === "player";
+    });
+    if (spawnObj) spawn = spawnObj;
+  }
 
   // Create the player at the spawn point — defined in player.js
-  var player = playerCreate(this, spawn.x, spawn.y, groundLayer);
+  var player = playerCreate(this, spawn.x, spawn.y, platformLayer);
+
+  // Middle layer collision
+  this.physics.add.collider(player, platformLayer);
 
   // ── Pickups ──────────────────────────────────
   // Read all objects from the spawnpoints layer that have type "pickups"
   var pickupGroup = this.physics.add.staticGroup();
-  spawnLayer.objects.forEach(function (obj) {
+  var spawnObjects = (spawnLayer && spawnLayer.objects) ? spawnLayer.objects : [];
+  spawnObjects.forEach(function (obj) {
     if (obj.type === "pickups") {
       // Tiled tile-objects have their origin at bottom-left, so shift to center
       var sprite = pickupGroup.create(
@@ -146,7 +163,7 @@ function create() {
   // ─────────────────────────────────────────────
 
   // Camera snap settings (instead of smooth follow)
-  this.CAMERA_SNAP_DISTANCE_X = 700; // pixels to move camera horizontally (slightly less than full screen)
+  this.CAMERA_SNAP_DISTANCE_X = 730; // pixels to move camera horizontally (slightly less than full screen)
   this.CAMERA_SNAP_DISTANCE_Y = 350; // pixels to move camera vertically (slightly less than full screen)
   this.EDGE_THRESHOLD = 40; // how close to screen edge triggers snap (reduced for less sensitivity)
   this.DEADZONE = 50; // unused but kept for tuning if needed
@@ -170,8 +187,8 @@ function create() {
   // Arrow key input
   this.cursors = this.input.keyboard.createCursorKeys();
 
-  // E key for pogo mechanic
-  this.pogoKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+  // E key for attack mechanic
+  this.attackKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
   // Debug text for player coordinates
   this.debugText = this.add
@@ -190,7 +207,7 @@ function create() {
 
 function update() {
   // Movement and animation — defined in player.js
-  playerUpdate(this.player, this.cursors, this.pogoKey);
+  playerUpdate(this.player, this.cursors, this.attackKey);
 
   // Update debug text with player coordinates
   var camera = this.cameras.main;
